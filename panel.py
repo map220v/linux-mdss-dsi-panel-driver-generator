@@ -38,6 +38,11 @@ class TrafficMode(Enum):
 
 	@staticmethod
 	def parse(prop: libfdt.Property) -> Optional[TrafficMode]:
+		if prop is None:
+			print(f"WARNING: qcom,mdss-dsi-traffic-mode does not exist")
+			print("Falling back to MIPI_DSI_MODE_VIDEO_SYNC_PULSE")
+			return TrafficMode.SYNC_PULSE
+
 		if prop.is_str():
 			return TrafficMode(prop.as_str())
 
@@ -223,7 +228,7 @@ class Panel:
 		self.framerate = fdt.getprop(mode_node, 'qcom,mdss-dsi-panel-framerate').as_uint32()
 		self.bpp = fdt.getprop(node, 'qcom,mdss-dsi-bpp').as_uint32()
 		self.mode = Mode(fdt.getprop(node, 'qcom,mdss-dsi-panel-type').as_str())
-		self.traffic_mode = TrafficMode.parse(fdt.getprop(node, 'qcom,mdss-dsi-traffic-mode'))
+		self.traffic_mode = TrafficMode.parse(fdt.getprop_or_none(node, 'qcom,mdss-dsi-traffic-mode'))
 
 		backlight = fdt.getprop_or_none(node, 'qcom,mdss-dsi-bl-pmic-control-type')
 		self.backlight = BacklightControl(backlight.as_str()) if backlight else None
